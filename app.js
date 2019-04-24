@@ -32,7 +32,7 @@ ${ssh.split(' ').join('\n')}
    if (request.body.ref === 'refs/heads/master') {
        request.body.commits.forEach(commit => {
         //execSync(`cat ${JSON.stringify(commit)}`);
-        execSync(`cd /tmp/data-orbit && git checkout beta && git cherry-pick ${commit.id}   && git push origin beta`, { encoding: 'utf8', stdio: 'inherit' })
+        execSync(`cd /tmp/data-orbit && git checkout beta && git cherry-pick -x ${commit.id}   && git push origin beta`, { encoding: 'utf8', stdio: 'inherit' })
        });
    }
    return request.body;
