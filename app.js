@@ -28,12 +28,14 @@ ${ssh.split(' ').join('\n')}
     execSync('cd /tmp/data-orbit && git config user.name "lambda beta bot"', { encoding: 'utf8', stdio: 'inherit' })
     //execSync(`cd /tmp/data-orbit && git remote update && git fetch origin`, { encoding: 'utf8', stdio: 'inherit' })
 
-  
+    let tmpBranchName;
    if (request.body.ref === 'refs/heads/master') {
        request.body.commits.forEach(commit => {
         //execSync(`cat ${JSON.stringify(commit)}`);
         if (commit.message.indexOf('BETA') > -1) {
-            execSync(`cd /tmp/data-orbit && git checkout beta && git cherry-pick -x ${commit.id}   && git push origin beta`, { encoding: 'utf8', stdio: 'inherit' })
+            tmpBranchName = `lambda-beta/${(Math.random() + "").slice(-7)}`;
+            execSync(`cd /tmp/data-orbit && git checkout beta && git checkout -b ${tmpBranchName} && git cherry-pick -x ${commit.id}   && git push origin ${tmpBranchName}`, { encoding: 'utf8', stdio: 'inherit' });
+            execSync(`curl -H "Authorization: token ${process.env.github_api_key}" --request POST --data '{"title": "Keeping beta up to date", "head": "${tmpBranchName}", "base": "beta"}'  https://api.github.com/repos/igorT/data-orbit/pulls`, { encoding: 'utf8', stdio: 'inherit' });
         }
        });
    }
