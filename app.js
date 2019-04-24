@@ -33,7 +33,7 @@ ${ssh.split(' ').join('\n')}
        request.body.commits.forEach(commit => {
         //execSync(`cat ${JSON.stringify(commit)}`);
         if (commit.message.indexOf('BETA') > -1) {
-            execSync(`cd /tmp/data-orbit && git checkout beta && git cherry-pick ${commit.id}   && git push origin beta`, { encoding: 'utf8', stdio: 'inherit' })
+            execSync(`cd /tmp/data-orbit && git checkout beta && git cherry-pick -x ${commit.id}   && git push origin beta`, { encoding: 'utf8', stdio: 'inherit' })
         }
        });
    }
