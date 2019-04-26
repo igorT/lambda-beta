@@ -22,11 +22,11 @@ ${ssh.split(' ').join('\n')}
   execSync('chmod 400 /tmp/id_rsa', { encoding: 'utf8', stdio: 'inherit' })
 
   process.env.GIT_SSH_COMMAND = 'ssh -o UserKnownHostsFile=/tmp/known_hosts -i /tmp/id_rsa'
+  let repo = request.body.repository.full_name;
 
-  execSync('git clone ssh://git@github.com/igorT/data-orbit.git /tmp/data-orbit', { encoding: 'utf8', stdio: 'inherit' })
+  execSync(`git clone ssh://git@github.com/${repo}.git /tmp/data-orbit`, { encoding: 'utf8', stdio: 'inherit' })
   execSync('cd /tmp/data-orbit &&   git config user.email "lambda+terzicigor@gmail.com"', { encoding: 'utf8', stdio: 'inherit' })
   execSync('cd /tmp/data-orbit && git config user.name "lambda beta bot"', { encoding: 'utf8', stdio: 'inherit' })
-  //execSync(`cd /tmp/data-orbit && git remote update && git fetch origin`, { encoding: 'utf8', stdio: 'inherit' })
 
   let tmpBranchName;
   if (request.body.ref === 'refs/heads/master') {
@@ -36,7 +36,7 @@ ${ssh.split(' ').join('\n')}
       if (commit.message.indexOf('BETA') > -1) {
         tmpBranchName = `lambda-beta/${(Math.random() + "").slice(-7)}`;
         execSync(`cd /tmp/data-orbit && git checkout beta && git checkout -b ${tmpBranchName} && git cherry-pick -x ${commit.id}   && git push origin ${tmpBranchName}`, { encoding: 'utf8', stdio: 'inherit' });
-        let result = await fetch(`https://api.github.com/repos/igorT/data-orbit/pulls`,
+        let result = await fetch(`https://api.github.com/repos/${repo}/pulls`,
           {
             method: 'POST',
             headers: {
@@ -46,7 +46,7 @@ ${ssh.split(' ').join('\n')}
           });
         let pr = await result.json();
         console.log('PR', pr);
-        result = await fetch(`https://api.github.com/repos/igorT/data-orbit/issues/${pr.number}`,
+        result = await fetch(`https://api.github.com/repos/${repo}/issues/${pr.number}`,
           {
             method: 'PATCH',
             headers: {
@@ -77,21 +77,14 @@ ${ssh.split(' ').join('\n')}
 
   process.env.GIT_SSH_COMMAND = 'ssh -o UserKnownHostsFile=/tmp/known_hosts -i /tmp/id_rsa'
 
-  /*
-  execSync('git clone ssh://git@github.com/igorT/data-orbit.git /tmp/data-orbit', { encoding: 'utf8', stdio: 'inherit' })
-  execSync('cd /tmp/data-orbit &&   git config user.email "lambda+terzicigor@gmail.com"', { encoding: 'utf8', stdio: 'inherit' })
-  execSync('cd /tmp/data-orbit && git config user.name "lambda beta bot"', { encoding: 'utf8', stdio: 'inherit' })
-  //execSync(`cd /tmp/data-orbit && git remote update && git fetch origin`, { encoding: 'utf8', stdio: 'inherit' })
-
-  let tmpBranchName;
-  */
   console.log(JSON.stringify(request.body));
+  let repo = request.body.repository.full_name;
 
   let prs = request.body.check_suite.pull_requests;
   let pr, prData, result;
   for (let i = 0; i < prs.length; i++) {
     pr = prs[i];
-    result = await fetch(`https://api.github.com/repos/igorT/data-orbit/pulls/${pr.number}`);
+    result = await fetch(`https://api.github.com/repos/${repo}/pulls/${pr.number}`);
     prData = await result.json();
 
     console.log(prData);
@@ -104,7 +97,7 @@ ${ssh.split(' ').join('\n')}
     console.log('label: ', hasLabel);
     if (prData.mergeable_state === 'clean' && hasLabel) {
       console.log('inside merge');
-      execSync(`curl -H "Authorization: token ${process.env.github_api_key}" --request PUT  https://api.github.com/repos/igorT/data-orbit/pulls/${pr.number}/merge`);
+      execSync(`curl -H "Authorization: token ${process.env.github_api_key}" --request PUT  https://api.github.com/repos/${repo}/pulls/${pr.number}/merge`);
     }
   }
   return request.body;
